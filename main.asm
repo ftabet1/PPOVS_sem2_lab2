@@ -5,14 +5,18 @@
 ;main begin
 _c_int00:
  	stm #stack, SP 	;stack init 
-  	ld #S1, DP	;data pointer init
+  	ld #temp, DP	;data pointer init
   	ssbx sxm	;set extension mode
   	ssbx ovm	;set overflow correction
   	ssbx frct	;set multiplier sign bit correction (>>1)
   	nop
   	
   	;init calc_arg args
-  	
+  	stm #C1,  AR2	;AR2 - const cos(a)
+  	stm #S1,  AR3	;AR3 - const sin(a)
+  	stm #arg, AR4
+  	stm #m	, AR5	
+  	call calc_arg
   	
   	;init calc_harm args
   	stm #C1, AR2	;AR2 - const cos(a)
@@ -34,7 +38,22 @@ loop:
 
 ;calc_arg func. begin
 calc_arg:
-	
+	ld *AR4, 16, A
+	exp a		;check zeros
+  	st  T, temp	;save T
+  	ld  temp, A	;load T to A
+  	sub #5, A	;A -= 5
+  	stl A, temp	;save A
+  	neg A
+  	stl A, m
+  	ld temp, T	;load A to T
+  	ld *AR4, 16, A	;load arg to a
+  	norm a		;norm a to threshold
+  	;now sin(arg)=arg (acc. A)
+  	
+  	;
+  	
+  	;
 	ret
 ;calc_arg func. begin
 
@@ -70,8 +89,12 @@ calc_sig:
 
   .align
   .data
-N 	 .set  3096	;number of sine tick's
-gar 	 .set  0x000B	;harm. number	
+N 	 .set  	3096	;number of sine tick's
+gar 	 .set 	0x000B	;harm. number	
+temp	 .word	0x0000  ;temp for thmsng
+arg	 .word 	0x0405	;sine argument value
+m	 .word	0x0000	;m-value to calculate sin(a) value
+
 S1 	 .word  0x0405	;sin(a) const. value
 C1 	 .word  0x7FF0	;cos(a) const. value
 Sn 	 .word  0x0000	;sin(an) value
