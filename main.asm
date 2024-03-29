@@ -36,6 +36,7 @@ loop:
   	b loop	
 ;main end
 
+
 ;calc_arg func. begin
 calc_arg:
 	ld *AR4, 16, A
@@ -65,18 +66,12 @@ calc_arg:
   	ld m, B
   	xc 2, BGT
   		call sin_recovery
-  	
-  	
-  	;
-  	
-  	;
 	ret
 
 ;alg begin
 sin_recovery:
 	sub #1, B
 	stlm B, AR1
-	rsbx frct
 	nop
 sin_rec_loop:
 		ld  *AR3, 16, B
@@ -93,11 +88,11 @@ sin_rec_loop:
 		stl B, *AR2	;cos(2a)
 		
 		banz sin_rec_loop, *AR1-
-		ssbx frct
-		nop
 	ret
 ;alg_end
+
 ;calc_arg func. end
+
 
 ;calc_harm func. begin
 calc_harm:
@@ -136,10 +131,10 @@ calc_sig:
 N 	 .set  	3096	;number of sine tick's
 gar 	 .set 	0x000B	;harm. number	
 temp	 .word	0x0000  ;temp for thmsng
-arg	 .word 	0x2C3D	;sine argument value
+arg	 .word 	0x0405  ;sine argument value
 m	 .word	0x0000	;m-value to calculate sin(a) value
-S1 	 .word  0x0000;0x0405	;sin(a) const. value
-C1 	 .word  0x0000;0x7FF0	;cos(a) const. value
+S1 	 .word  0x0000  ;sin(a) const. value
+C1 	 .word  0x0000	;cos(a) const. value
 Sn 	 .word  0x0000	;sin(an) value
 Cn       .word  0x7FFF	;cos(an) value
 sig 	 .space  (N*8*2)	;signal tick's array
