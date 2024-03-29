@@ -14,8 +14,8 @@ _c_int00:
   	;init calc_arg args
   	stm #C1,  AR2	;AR2 - const cos(a)
   	stm #S1,  AR3	;AR3 - const sin(a)
-  	stm #arg, AR4
-  	stm #m	, AR5	
+  	stm #arg, AR4	;AR4 - argument value
+  	stm #m	, AR5	;AR5 - M value
   	call calc_arg
   	
   	;init calc_harm args
@@ -45,17 +45,59 @@ calc_arg:
   	sub #5, A	;A -= 5
   	stl A, temp	;save A
   	neg A
-  	stl A, m
+  	stl A, m	;save m value
   	ld temp, T	;load A to T
   	ld *AR4, 16, A	;load arg to a
-  	norm a		;norm a to threshold
+  	norm A		;norm a to threshold
   	;now sin(arg)=arg (acc. A)
+  	sth  A, *AR3 ;save sin(a)
+  	
+  	;cos(a) first calc begin
+  		squr A, A
+  		sfta A, -1
+  		sth  a, temp
+  		ld #0x7FFF, A
+  		sub temp, A
+  	;end	
+  	nop
+  	stl  A, *AR2 ;save cos(a)
+  	
+  	ld m, B
+  	xc 2, BGT
+  		call sin_recovery
+  	
   	
   	;
   	
   	;
 	ret
-;calc_arg func. begin
+
+;alg begin
+sin_recovery:
+	sub #1, B
+	stlm B, AR1
+	rsbx frct
+	nop
+sin_rec_loop:
+		ld  *AR3, 16, B
+		mpy *AR3, *AR2, A
+		sfta A, 1
+		sth  A, *AR3	;sin(2a)
+		
+		ld B, A
+		squr A, B
+		sfta B, 1
+		sth  B, temp
+		ld #0x7FFF, B
+		sub temp, B
+		stl B, *AR2	;cos(2a)
+		
+		banz sin_rec_loop, *AR1-
+		ssbx frct
+		nop
+	ret
+;alg_end
+;calc_arg func. end
 
 ;calc_harm func. begin
 calc_harm:
@@ -74,6 +116,7 @@ calc_harm:
   	RET 
 ;calc_harm func. end
 
+
 ;calc_sig func. begin
 calc_sig:
   		mpy *AR3, *AR4, A	;A =  sin(a) * cos(an)
@@ -87,16 +130,16 @@ calc_sig:
   	RET
 ;calc_sig func. end  
 
+
   .align
   .data
 N 	 .set  	3096	;number of sine tick's
 gar 	 .set 	0x000B	;harm. number	
 temp	 .word	0x0000  ;temp for thmsng
-arg	 .word 	0x0405	;sine argument value
+arg	 .word 	0x2C3D	;sine argument value
 m	 .word	0x0000	;m-value to calculate sin(a) value
-
-S1 	 .word  0x0405	;sin(a) const. value
-C1 	 .word  0x7FF0	;cos(a) const. value
+S1 	 .word  0x0000;0x0405	;sin(a) const. value
+C1 	 .word  0x0000;0x7FF0	;cos(a) const. value
 Sn 	 .word  0x0000	;sin(an) value
 Cn       .word  0x7FFF	;cos(an) value
 sig 	 .space  (N*8*2)	;signal tick's array
